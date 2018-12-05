@@ -2,7 +2,8 @@ const fs = require ('fs');
 const http = require('http');
 const querystring = require('querystring');
 
-// const letter = process.argv[2].toUpperCase();
+let letter;
+let cache = {};
 
 function animalList(animals) {
     return animals
@@ -25,17 +26,30 @@ function animalList(animals) {
 //         console.log("File successfully written!");
 //     });
 // });
-
+// let letter; 
 const server = http.createServer((req, res) => {
-    let letter = process.argv[2];
+    if (process.argv[2]) {
+      letter = process.argv[2].toUpperCase();
+    }
+    
+    console.log(querystring.stringify(req));
     
     fs.readFile(`./animals.txt`, 'utf-8', (err, data) => {
+        let animals;
         if (err) {
             console.log(err);
             return;
         }
 
-        let animals = letter ? animalList(data.split("\n")) : data
+        if (!letter) {
+            animals = data;
+        } else if (cache[letter]) {
+            animals = cache[letter];
+        } else {
+            animals = animalList(data.split("\n"));
+            cache[letter] = animals;
+        }
+        
         res.write(animals);
         res.end();
         }
